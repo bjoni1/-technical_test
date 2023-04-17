@@ -183,6 +183,7 @@ const Activities = ({ date, user, project }) => {
                       }, 0);
                       return <Field key={`day-${i}`} value={v} disabled />;
                     })}
+                    
                   </tr>
                   {activities.map((e, i) => {
                     return (
