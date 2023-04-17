@@ -2,6 +2,7 @@ import { Formik } from "formik";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useHistory } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 import Loader from "../../components/loader";
 import LoadingButton from "../../components/loadingButton";
@@ -10,34 +11,41 @@ import ProgressBar from "../../components/ProgressBar";
 import api from "../../services/api";
 const ProjectList = () => {
   const [projects, setProjects] = useState(null);
-  const [activeProjects, setActiveProjects] = useState(null);
-
+  const [projectsFiltered, setProjectsFiltered] = useState(null);
+  const [filter, setFilter] = useState({ status: "active", search: "" });
+    const {role} = useSelector((state) => state.Auth.user);
   const history = useHistory();
 
-  useEffect(() => {
-    (async () => {
-      const { data: u } = await api.get("/project");
+  async function getProjects() {
+    const { data: u } = await api.get("/project");
       setProjects(u);
-    })();
-  }, []);
+    }
 
   useEffect(() => {
-    const p = (projects || []).filter((p) => p.status === "active");
-    setActiveProjects(p);
-  }, [projects]);
+    getProjects();
+    return () => {
+      setProjects([]);
+    }
+  }, [])
 
-  if (!projects || !activeProjects) return <Loader />;
+  useEffect(() => {
+    if (!projects) return;
+    setProjectsFiltered(
+      projects
+        .filter((u) => !filter?.status || u.status === filter?.status)
+        .filter((u) => !filter?.search || u.name.toLowerCase().includes(filter?.search.toLowerCase())),
+      );
+  }, [projects, filter]);
 
-  const handleSearch = (searchedValue) => {
-    const p = (projects || []).filter((p) => p.status === "active").filter((e) => e.name.toLowerCase().includes(searchedValue.toLowerCase()));
-    setActiveProjects(p);
-  };
+  if (!projects || !projectsFiltered) return <Loader />;
+  
 
   return (
     <div className="w-full p-2 md:!px-8">
-      <Create onChangeSearch={handleSearch} />
+      <Create onChangeSearch={handleSearch} refresh={getProjects}/>
+      <FilterStatus filter={filter} setFilter={setFilter} />
       <div className="py-3">
-        {activeProjects.map((hit) => {
+        {projectsFiltered.map((hit) => {
           return (
             <div
               key={hit._id}
@@ -54,18 +62,19 @@ const ProjectList = () => {
               <div className="w-full md:w-[50%] border-r border-[#E5EAEF] pl-[10px]">
                 <span className="text-[14px] font-medium text-[#212325]">{hit.description ? hit.description : ""}</span>
               </div>
-              <div className="w-full md:w-[25%]  px-[10px]">
+              {role === "ADMIN" && <div className="w-full md:w-[25%]  px-[10px]">
                 <span className="text-[16px] font-medium text-[#212325]">Budget consumed {hit.paymentCycle === "MONTHLY" && "this month"}:</span>
                 <Budget project={hit} />
-              </div>
+              </div>}
             </div>
           );
         })}
       </div>
     </div>
   );
-};
+    };
 
+  
 const Budget = ({ project }) => {
   const [activities, setActivities] = useState([10, 29, 18, 12]);
 
@@ -91,9 +100,37 @@ const Budget = ({ project }) => {
   if (!project.budget_max_monthly) return <div className="mt-2 text-[24px] text-[#212325] font-semibold">{total.toFixed(2)}€</div>;
   return <ProgressBar percentage={width} max={budget_max_monthly} value={total} />;
 };
+const FilterStatus = ({ filter, setFilter }) => {
+  return (
+    <div className="flex">
+      <select
+        className="w-[180px] bg-[#FFFFFF] text-[14px] text-[#212325] font-normal py-2 px-[14px] rounded-[10px] border-r-[16px] border-[transparent] cursor-pointer"
+        value={filter.status}
+        onChange={(e) =>{
+          e.persist();
+          setFilter({ ...filter, status: e.target.value })}
+        }> 
+        <option disabled>Status</option>
+        <option value={""}>All status</option>
+        {[
+          { value: "active", label: "Active" },
+          { value: "inactive", label: "Inactive" },
+        ].map((e) => {
+          return (
+            <option key={e.value} value={e.value} label={e.label}>
+              {e.label}
+            </option>
+          );
+        })}
+      </select>
+    </div>
+  );
+};
 
-const Create = ({ onChangeSearch }) => {
+const Create = ({ setFilter, refresh }) => {
   const [open, setOpen] = useState(false);
+  const {role} = useSelector((state) => state.Auth.user);
+
 
   return (
     <div className="mb-[10px] ">
@@ -112,17 +149,20 @@ const Create = ({ onChangeSearch }) => {
             name="q"
             className="py-2 w-[364px] h-[48px] text-[16px] font-medium text-[black] rounded-[10px] bg-[#F9FBFD] border border-[#FFFFFF] pl-10"
             placeholder="Search"
-            onChange={(e) => onChangeSearch(e.target.value)}
+            onChange={(e) => {
+              e.persist();
+              setFilter((prev) => ({ ...prev, search: e.target.value }));
+            }}
           />
         </div>
         {/* Create New Button */}
-        <button
+        {role ==="ADMIN" && <button
           className="bg-[#0560FD] text-[#fff] py-[12px] px-[20px] rounded-[10px] text-[16px] font-medium"
           onClick={() => {
             setOpen(true);
           }}>
           Create new project
-        </button>
+        </button>}
       </div>
 
       {open ? (
@@ -130,6 +170,8 @@ const Create = ({ onChangeSearch }) => {
           className=" absolute top-0 bottom-0 left-0 right-0 bg-[#00000066] flex justify-center p-[1rem] z-50 "
           onClick={() => {
             setOpen(false);
+            refresh?.();
+
           }}>
           <div
             className="w-full md:w-[60%] max-h-[200px] bg-[white] p-[25px] rounded-md"

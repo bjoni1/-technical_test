@@ -54,6 +54,7 @@ const App = () => {
               <Switch>
                 <Route path="/auth" component={Auth} />
                 <RestrictedRoute path="/user" component={User} />
+                {user?.role === "ADMIN" && <RestrictedRoute path="/user" component={User} />}
 
                 <RestrictedRoute path="/activity" component={Activity} />
 
@@ -69,7 +70,7 @@ const App = () => {
   );
 };
 
-const RestrictedRoute = ({ component: Component, role, ...rest }) => {
+const RestrictedRoute = ({ component: Component, ...rest }) => {
   const user = useSelector((state) => state.Auth.user);
   if (!user) return <Redirect to={{ pathname: "/auth" }} />;
   return <Route {...rest} render={(props) => (user ? <Component {...props} /> : <Redirect to={{ pathname: "/auth" }} />)} />;

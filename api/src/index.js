@@ -12,7 +12,7 @@ const app = express();
 
 const origin = [APP_URL, "https://join.le-stud.com"];
 
-app.use(cors({ credentials: true, origin }));
+app.use(cors({ credentials: true, origin:'http://localhost:3000' }));
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());

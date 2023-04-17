@@ -23,10 +23,10 @@ export default ({ value, active = true, onChange }) => {
         value={value || ""}
         onChange={(e) => {
           e.preventDefault();
-          const f = projects.find((f) => e.target.value === f.name);
+          const f = projects.find((f) => e.target.value === f._id);
           onChange(f);
         }}>
-        <option disabled>Project</option>
+        <option >Project</option>
         <option value={""}>All Project</option>
         {projects
           .sort(function (a, b) {
@@ -36,7 +36,7 @@ export default ({ value, active = true, onChange }) => {
           })
           .map((e) => {
             return (
-              <option key={e.name} value={e.name}>
+              <option key={e.name} value={e._id}>
                 {e.name}
               </option>
             );

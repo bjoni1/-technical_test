@@ -25,15 +25,17 @@ export default () => {
     setIsLoading(true);
     let body = values;
     try {
-      const responseData = await api.put(`/user/${user._id}`, body);
-      toast.success("Updated!");
-      dispatch(setUser(responseData.user));
+      const responseData = await api.post("/users", body);
+      toast.success("User created successfully!");
+      dispatch(addUser(responseData.user)); // Update Redux store
+      history.push("/account"); // Redirect to Account page
     } catch (e) {
       console.log(e);
       toast.error("Some Error!");
     }
     setIsLoading(false);
   }
+  
 
   return (
     <div>

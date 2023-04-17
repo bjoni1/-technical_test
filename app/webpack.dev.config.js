@@ -27,6 +27,7 @@ module.exports = (env) => {
     },
     devServer: {
       contentBase: "build",
+      port: 8080,
       historyApiFallback: true,
       inline: true,
       hot: true,

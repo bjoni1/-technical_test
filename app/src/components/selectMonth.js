@@ -31,7 +31,7 @@ export default ({ value = "", onChange, start = 0, name = "date", indexDefaultVa
         name={name}
         value={value}
         onChange={onChange}>
-        <option disabled>Month</option>
+        <option >Month</option>
         <option key={""} value={""}>
           {placeholder}
         </option>
