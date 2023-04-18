@@ -43,7 +43,7 @@ Send us the project and answer to those simple questions :
 
 ____________________________________________________________________________________________________________________
 ## Run the project
-- I changed the fronted port to 3000
+- I changed the frontend port to 3000
 - You can run both the api and app components using npm start
 ## Bugs
 - In the singup.js file , the input for the password field wasnt working properly.The problem was that the type of the input wasnt specified -> type="password"
